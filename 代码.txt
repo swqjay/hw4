@@ -1,0 +1,240 @@
+task1：
+clear all;
+file_path = 'F:\数字图像处理作业\第四次作业\';% 图像文件夹路径 
+A=imread('test1.pgm');%读取图像
+B=imread('test2.TIF');%读取图像
+
+G1= fspecial('gaussian',[3,3],1.5);
+G2= fspecial('gaussian',[5,5],1.5);
+G3= fspecial('gaussian',[7,7],1.5);
+
+figure(1);  
+subplot(2,2,1);  
+imshow(A);title('原图');  
+subplot(2,2,2)  
+imshow(imfilter(A,G1,'replicate'));title('3*3高斯')  
+subplot(2,2,3);
+imshow(imfilter(A,G2,'replicate'));title('5*5高斯')  
+subplot(2,2,4)  
+imshow(imfilter(A,G3,'replicate'));title('7*7高斯')  
+
+figure(2);  
+subplot(2,2,1);  
+imshow(B);title('原图');  
+subplot(2,2,2)  
+imshow(imfilter(B,G1,'replicate'));title('3*3高斯')  
+subplot(2,2,3);
+imshow(imfilter(B,G2,'replicate'));title('5*5高斯')  
+subplot(2,2,4)  
+imshow(imfilter(B,G3,'replicate'));title('7*7高斯')  
+
+figure(3);  
+subplot(2,2,1);  
+imshow(A);title('原图');  
+subplot(2,2,2)  
+imshow(medfilt2(A,[3,3]));title('3*3中值');
+subplot(2,2,3);
+imshow(medfilt2(A,[5,7]));title('5*5中值');  
+subplot(2,2,4)  
+imshow(medfilt2(A,[5,7]));title('7*7中值'); 
+
+figure(4);  
+subplot(2,2,1);  
+imshow(B);title('原图');  
+subplot(2,2,2)  
+imshow(medfilt2(B,[3,3]));title('3*3中值');
+subplot(2,2,3);
+imshow(medfilt2(B,[5,7]));title('5*5中值');  
+subplot(2,2,4)  
+imshow(medfilt2(B,[5,7]));title('7*7中值'); 
+
+task2：
+clear all;
+file_path = 'F:\数字图像处理作业\第四次作业\';% 图像文件夹路径 
+A=imread('test3_corrupt.pgm');%读取图像
+B=imread('test4 copy.bmp');%读取图像
+
+G= fspecial('gaussian',[7,7],3);
+
+A1=imfilter(A,G,'replicate');
+m1=A-A1;%模板
+Aunsharp=m1+A;
+
+figure(1);
+subplot(1,3,1);
+imshow(A);title('原图');
+subplot(1,3,2);
+imshow(m1);title('模板');
+subplot(1,3,3);
+imshow(Aunsharp);title('USM');
+
+B1=imfilter(B,G,'replicate');
+m2=B-B1;
+Bunsharp=m2+B;
+figure(2);
+subplot(1,3,1);
+imshow(B);title('原图');
+subplot(1,3,2);
+imshow(m2);title('模板');
+subplot(1,3,3);
+imshow(Bunsharp);title('USM');
+
+task3：
+clear all;
+file_path = 'F:\数字图像处理作业\第四次作业\';% 图像文件夹路径 
+A=imread('test3_corrupt.pgm');%读取图像
+B=imread('test4 copy.bmp');%读取图像
+
+sx=[-1,0,1;-2,0,2;-1,0,1];
+sy=[-1,-2,-1;0,0,0;1,2,1];%算子
+
+Gx1=conv2(A,sx,'same');
+Gy1=conv2(A,sy,'same');%卷积
+G1=abs(Gx1)+abs(Gy1);
+G1=uint8(G1);
+
+Gx2=conv2(B,sx,'same');
+Gy2=conv2(B,sy,'same');
+G2=abs(Gx2)+abs(Gy2);
+G2=uint8(G2);
+
+subplot(2,2,1);
+imshow(A);title('test3');
+subplot(2,2,2);
+imshow(G1);title('sobel');
+subplot(2,2,3);
+imshow(B);title('teat4');
+subplot(2,2,4);
+imshow(G2);title('sobel');
+
+
+task4：
+clear all;
+file_path = 'F:\数字图像处理作业\第四次作业\';% 图像文件夹路径 
+A=imread('test3_corrupt.pgm');%读取图像
+B=imread('test4 copy.bmp');%读取图像
+
+laplace=[1,1,1;1,-8,1;1,1,1];   %构造拉普拉斯算子
+
+A1=uint8(conv2(A,laplace,'same'));
+A1=uint8(A1);
+
+B1=uint8(conv2(B,laplace,'same'));
+B1=uint8(B1);
+
+subplot(2,2,1);
+imshow(A);title('test3');
+subplot(2,2,2);
+imshow(A1);title('la');
+subplot(2,2,3);
+imshow(B);title('teat4');
+subplot(2,2,4);
+imshow(B1);title('la');  
+
+task5：
+clear all;
+file_path = 'F:\数字图像处理作业\第四次作业\';% 图像文件夹路径 
+A=imread('test4 copy.bmp');%读取图像
+
+G= fspecial('gaussian',[3,3],2);
+A=imfilter(A,G,'replicate');
+
+
+[M,N,dim ] = size(A);
+if dim>1
+    A = rgb2gray(A);%转灰度
+end
+
+
+A = double(A);
+m = zeros(M, N); 
+theta = zeros(M, N);
+sector = zeros(M, N);
+canny1 = zeros(M, N);%非极大值抑制
+canny2 = zeros(M, N);%双阈值检测和连接
+bin = zeros(M, N);
+
+
+for y = 1:(M-1)
+    for x = 1:(N-1)
+        gx =  A(y, x) + A(y+1, x) - A(y, x+1)  - A(y+1, x+1);
+        gy = -A(y, x) + A(y+1, x) - A(y, x+1) + A(y+1, x+1);
+        m(y,x) = (gx^2+gy^2)^0.5 ;   %得到图像的梯度幅值矩阵
+      
+        theta(y,x) = atand(gx/gy);%得到图像的梯度方向矩阵
+        tem = theta(y,x);
+       
+        if (tem<67.5)&&(tem>22.5)
+            sector(y,x) =  0;    
+        elseif (tem<22.5)&&(tem>-22.5)
+            sector(y,x) =  3;    
+        elseif (tem<-22.5)&&(tem>-67.5)
+            sector(y,x) =   2;    
+        else
+            sector(y,x) =   1;    
+        end
+    end    
+end
+
+for y = 2:(M-1)  %非极大值抑制
+    for x = 2:(N-1)        
+        if 0 == sector(y,x) %右上 - 左下
+            if ( m(y,x)>m(y-1,x+1) )&&( m(y,x)>m(y+1,x-1)  )
+                canny1(y,x) = m(y,x);
+            else
+                canny1(y,x) = 0;
+            end
+        elseif 1 == sector(y,x) %竖直方向
+            if ( m(y,x)>m(y-1,x) )&&( m(y,x)>m(y+1,x)  )
+                canny1(y,x) = m(y,x);
+            else
+                canny1(y,x) = 0;
+            end
+        elseif 2 == sector(y,x) %左上 - 右下
+            if ( m(y,x)>m(y-1,x-1) )&&( m(y,x)>m(y+1,x+1)  )
+                canny1(y,x) = m(y,x);
+            else
+                canny1(y,x) = 0;
+            end
+        elseif 3 == sector(y,x) %横方向
+            if ( m(y,x)>m(y,x+1) )&&( m(y,x)>m(y,x-1)  )
+                canny1(y,x) = m(y,x);
+            else
+                canny1(y,x) = 0;
+            end
+        end        
+    end
+end
+
+
+lowTh=5;highTh=30;
+
+for y = 2:(M-1)   %双阈值检测
+    for x = 2:(N-1)        
+        if canny1(y,x)<lowTh %低阈值处理
+            canny2(y,x) = 0;
+            bin(y,x) = 0;
+            continue;
+        elseif canny1(y,x)>highTh %高阈值处理
+            canny2(y,x) = canny1(y,x);
+            bin(y,x) = 1;
+            continue;
+        else %介于之间的看其8领域有没有高于高阈值的，有则可以为边缘
+            tem =[canny1(y-1,x-1), canny1(y-1,x), canny1(y-1,x+1);
+                       canny1(y,x-1),    canny1(y,x),   canny1(y,x+1);
+                       canny1(y+1,x-1), canny1(y+1,x), canny1(y+1,x+1)];
+            temMax = max(tem);
+            if temMax(1) > highTh
+                canny2(y,x) = temMax(1);
+                bin(y,x) = 1;
+                continue;
+            else
+                canny2(y,x) = 0;
+                bin(y,x) = 0;
+                continue;
+            end
+        end
+    end
+end
+canny2=im2double(canny2);
+imshow(canny2);
